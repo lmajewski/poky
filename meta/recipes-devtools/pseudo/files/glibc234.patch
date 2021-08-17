@@ -1,0 +1,86 @@
+pseudo_wrappers/pseudo_util: Add versioning to dl* symbols to work with glibc 2.34
+
+From glibc 2.34 onwards, libdl is merged into libc. We need to work with libaries
+linked with older libc and newer ones without requiring glibc 2.34 to be linked
+in. To do this, use an older verison of the symbols. Sadly this is highly arch
+specific.
+
+Upstream-Status: Pending
+Signed-off-by: Richard Purdie <richard.purdie@linuxfoundation.org>
+
+Index: git/pseudo_util.c
+===================================================================
+--- git.orig/pseudo_util.c
++++ git/pseudo_util.c
+@@ -28,6 +28,11 @@
+ #include "pseudo.h"
+ #include "pseudo_ipc.h"
+ #include "pseudo_db.h"
++#include "pseudo_dlsymvers.h"
++
++#if defined(__GLIBC__)
++__asm__(".symver dlsym,dlsym@GLIBC_" DLSYMVER);
++#endif
+ 
+ struct pseudo_variables {
+ 	char *key;
+Index: git/pseudo_wrappers.c
+===================================================================
+--- git.orig/pseudo_wrappers.c
++++ git/pseudo_wrappers.c
+@@ -28,6 +28,7 @@
+ 
+ /* include this to get PSEUDO_PORT_* definitions */
+ #include "pseudo.h"
++#include "pseudo_dlsymvers.h"
+ 
+ /* used for various specific function arguments */
+ #include <dirent.h>
+@@ -122,6 +123,12 @@ pseudo_reinit_libpseudo(void) {
+ 	_libpseudo_init();
+ }
+ 
++#if defined(__GLIBC__)
++__asm__(".symver dlerror,dlerror@GLIBC_" DLSYMVER);
++__asm__(".symver dlvsym,dlvsym@GLIBC_" DLVSYMVER);
++__asm__(".symver dlsym,dlsym@GLIBC_" DLSYMVER);
++#endif
++
+ static void
+ pseudo_init_one_wrapper(pseudo_function *func) {
+ 	int (*f)(void) = (int (*)(void)) NULL;
+Index: git/pseudo_dlsymvers.h
+===================================================================
+--- /dev/null
++++ git/pseudo_dlsymvers.h
+@@ -0,0 +1,30 @@
++/*
++ * Copyright (c) 2021 Richard Purdie
++ *
++ * SPDX-License-Identifier: LGPL-2.1-only
++ *
++ */
++
++/* We need to use the older symbols in libdl.so rather than the newer ones
++   merged into libc.so in glibc 2.34 onwards since libpseudo needs to link/work
++   with newer libcs and bianries compiles with older ones */
++
++#if defined(__GLIBC__) 
++#if defined(__aarch64__)
++#define DLSYMVER "2.17"
++#define DLVSYMVER "2.17"
++#elif defined(__x86_64__)
++#define DLSYMVER "2.2.5"
++#define DLVSYMVER "2.2.5"
++#elif defined(__arm__)
++#define DLSYMVER "2.4"
++#define DLVSYMVER "2.4"
++#elif defined(__mips__)
++#define DLSYMVER "2.0"
++#define DLVSYMVER "2.2"
++#else
++#define DLSYMVER "2.0"
++#define DLVSYMVER "2.1"
++#endif
++#endif
++
