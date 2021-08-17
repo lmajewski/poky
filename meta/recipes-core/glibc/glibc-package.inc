@@ -122,6 +122,7 @@ do_install() {
 	fi
         lnr ${D}${base_libdir}/libpthread.so.0 ${D}${libdir}/libpthread.so
         lnr ${D}${base_libdir}/librt.so.1 ${D}${libdir}/librt.so
+        lnr ${D}${base_libdir}/libdl.so.2 ${D}${libdir}/libdl.so
 }
 
 def get_libc_fpu_setting(bb, d):
