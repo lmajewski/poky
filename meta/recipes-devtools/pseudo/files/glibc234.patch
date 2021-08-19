@@ -53,7 +53,7 @@ Index: git/pseudo_dlsymvers.h
 ===================================================================
 --- /dev/null
 +++ git/pseudo_dlsymvers.h
-@@ -0,0 +1,30 @@
+@@ -0,0 +1,38 @@
 +/*
 + * Copyright (c) 2021 Richard Purdie
 + *
@@ -78,6 +78,14 @@ Index: git/pseudo_dlsymvers.h
 +#elif defined(__mips__)
 +#define DLSYMVER "2.0"
 +#define DLVSYMVER "2.2"
++#elif defined(__riscv)
++#if __riscv_xlen == 32
++#define DLSYMVER "2.33"
++#define DLVSYMVER "2.33"
++#elif __riscv_xlen == 64
++#define DLSYMVER "2.27"
++#define DLVSYMVER "2.27"
++#endif
 +#else
 +#define DLSYMVER "2.0"
 +#define DLVSYMVER "2.1"
